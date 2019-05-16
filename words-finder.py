@@ -3,6 +3,7 @@ import os
 import collections
 import argparse
 import sys
+from git import Repo, GitCommandError
 
 from nltk import pos_tag
 
@@ -113,20 +114,52 @@ def get_top_words_in_path(path: str, word_types: set, top_size=10) -> dict:
 #     return collections.Counter(cleaned_names).most_common(top_size)
 
 
-def find_words(projects: set, word_types: set, top_size: int):
+def clone_repo_from_git(repo: str):
+
+    repo_name = repo.split('/')[-1].replace('.git', '')
+    try:
+        Repo.clone_from(repo, '/'.join(('repo', repo_name)))
+    except GitCommandError:
+        print(f'{repo_name} is not available')
+        return None
+
+    repo_path = os.path.join('.', '/'.join((os.getcwd(), 'repo')))
+    print(f'{repo_name} downloaded to {repo_path}')
+
+    return repo_path
+
+
+def get_all_projects_paths(folders, repositories):
+
+    projects_paths = set()
+
+    if folders:
+        for folder in folders:
+            projects_paths.add(os.path.join('.', folder))
+
+    if repositories:
+        for repo_uri in repositories:
+            repo_path = clone_repo_from_git(repo_uri)
+            if repo_path:
+                projects_paths.add(repo_path)
+
+    return projects_paths
+
+
+def find_words(projects_paths: set, word_types: set, top_size: int):
     result_words = collections.defaultdict(collections.Counter)
     total_words_counter = 0
     unique_words_counter = 0
 
-    for project in projects:
-        project_path = os.path.join('.', project)
+
+    for project_path in projects_paths:
         new_words_by_type = get_top_words_in_path(project_path, word_types, top_size)
 
-        for word_type, new_words in new_words_by_type.items():
+        for word_type, new_words in new_words_by_type.items():  # update result words dict from new words
             result_words[word_type] += collections.Counter(dict(new_words))
             total_words_counter += len(new_words)
 
-    for word_type, words_list in result_words.items():
+    for word_type, words_list in result_words.items():  # count words
         result_words[word_type] = dict(collections.Counter(words_list).most_common(top_size))
         unique_words_counter += len(result_words[word_type])
 
@@ -153,10 +186,15 @@ if __name__ == '__main__':
     wf_arg_parser = argparse.ArgumentParser(description='analyses usage of words in functions or variables names')
     wf_arg_parser.add_argument(
         "--dirs",
-        dest='folders',
+        dest='folders_by_comma',
         action='store',
-        default=os.getcwd(),
         help='folders for analysis, split by comma'
+    )
+    wf_arg_parser.add_argument(
+        "--git",
+        dest='repositories_by_comma',
+        action='store',
+        help='git repo .git urls for analysis, split by comma'
     )
     wf_arg_parser.add_argument(
         "--top",
@@ -167,17 +205,27 @@ if __name__ == '__main__':
     )
     wf_arg_parser.add_argument(
         "--wt",
-        dest='word_types',
+        dest='word_types_by_comma',
         default='NN',
         action='store',
         help='word types for analysis, split by comma. VB = verb, NN = noun'
     )
 
     args = wf_arg_parser.parse_args(sys.argv[1:])
-    folders = set(args.folders.split(','))
-    word_types = set(args.word_types.split(','))
-    print(args.word_types)
+    if args.repositories_by_comma:
+        repositories = set(args.repositories_by_comma.split(','))
+    else:
+        repositories = None
 
-    words, total_words_counter, unique_words_counter = find_words(folders, word_types, int(args.max_top))
+    if args.folders_by_comma:
+        folders = set(args.folders_by_comma.split(','))
+    else:
+        folders = None
+
+    word_types = set(args.word_types_by_comma.split(','))
+
+    all_folders = get_all_projects_paths(folders, repositories)
+
+    words, total_words_counter, unique_words_counter = find_words(all_folders, word_types, int(args.max_top))
     write_report_to_console(words, total_words_counter, unique_words_counter)
 
