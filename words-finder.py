@@ -26,10 +26,8 @@ def check_word_type(word: str) -> bool:
     return pos_info[0][1]
 
 
-def get_trees(path: str, with_file_names=False, with_file_content=False) -> list:
+def get_python_files(path: str) -> set:
     file_names = set()
-    trees = list()
-
     for dir_name, dirs, files in os.walk(path, topdown=True):
         for file in files:
             if file.endswith('.py'):
@@ -39,6 +37,15 @@ def get_trees(path: str, with_file_names=False, with_file_content=False) -> list
         else:
             continue
         break
+    return file_names
+
+
+def get_trees(path: str, lang: str, with_file_names=False, with_file_content=False) -> list:
+
+    trees = list()
+
+    if lang == 'python':
+        file_names = get_python_files(path)
 
     print('total %s files' % len(file_names))
 
@@ -90,7 +97,7 @@ def split_snake_case_name_to_words(snake_name):
 
 
 def get_top_words_in_path(path: str, word_types: set, top_size=10) -> dict:
-    trees = get_trees(path)
+    trees = get_trees(path, lang='python')
     all_functions = make_flat(
         [[node.name.lower() for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)] for tree in
          trees])
@@ -115,30 +122,30 @@ def get_top_words_in_path(path: str, word_types: set, top_size=10) -> dict:
 
 
 def clone_repo_from_git(repo: str):
-
     repo_name = repo.split('/')[-1].replace('.git', '')
     try:
-        Repo.clone_from(repo, '/'.join(('repo', repo_name)))
-    except GitCommandError:
-        print(f'{repo_name} is not available')
+        Repo.clone_from(repo, os.path.join('repo', repo_name))
+    except GitCommandError as git_error:
+        print(f'{repo_name} was not downloaded because of:')
+        print(git_error)
         return None
 
-    repo_path = os.path.join('.', '/'.join((os.getcwd(), 'repo')))
+    repo_path = os.path.join('.', os.path.join(os.getcwd(), 'repo'))
     print(f'{repo_name} downloaded to {repo_path}')
 
     return repo_path
 
 
-def get_all_projects_paths(folders, repositories):
+def get_all_projects_paths(local_paths, git_repositories_urls):
 
     projects_paths = set()
 
-    if folders:
-        for folder in folders:
+    if local_paths:
+        for folder in local_paths:
             projects_paths.add(os.path.join('.', folder))
 
-    if repositories:
-        for repo_uri in repositories:
+    if git_repositories_urls:
+        for repo_uri in git_repositories_urls:
             repo_path = clone_repo_from_git(repo_uri)
             if repo_path:
                 projects_paths.add(repo_path)
@@ -163,7 +170,6 @@ def find_words(projects_paths: set, word_types: set, top_size: int):
         result_words[word_type] = dict(collections.Counter(words_list).most_common(top_size))
         unique_words_counter += len(result_words[word_type])
 
-    # print('Words ' + str(result_words))
     return result_words, total_words_counter, unique_words_counter
 
 
@@ -201,21 +207,28 @@ if __name__ == '__main__':
         dest='max_top',
         default=TOP_WORDS_AMOUNT,
         action='store',
-        help=''
+        help=f'count of top of words in every project. default={TOP_WORDS_AMOUNT}'
     )
     wf_arg_parser.add_argument(
-        "--wt",
+        "--word_types",
         dest='word_types_by_comma',
         default='NN',
         action='store',
         help='word types for analysis, split by comma. VB = verb, NN = noun'
     )
+    wf_arg_parser.add_argument(
+        "--report_type",
+        dest='report_type',
+        default='console',
+        action='store',
+        help='type of the report: console, json, csv. default=console'
+    )
 
     args = wf_arg_parser.parse_args(sys.argv[1:])
     if args.repositories_by_comma:
-        repositories = set(args.repositories_by_comma.split(','))
+        git_repositories = set(args.repositories_by_comma.split(','))
     else:
-        repositories = None
+        git_repositories = None
 
     if args.folders_by_comma:
         folders = set(args.folders_by_comma.split(','))
@@ -224,8 +237,10 @@ if __name__ == '__main__':
 
     word_types = set(args.word_types_by_comma.split(','))
 
-    all_folders = get_all_projects_paths(folders, repositories)
+    all_folders = get_all_projects_paths(folders, git_repositories)
 
     words, total_words_counter, unique_words_counter = find_words(all_folders, word_types, int(args.max_top))
-    write_report_to_console(words, total_words_counter, unique_words_counter)
+
+    if args.report_type == 'console':
+        write_report_to_console(words, total_words_counter, unique_words_counter)
 
