@@ -1,8 +1,7 @@
 import ast
 import os
 import collections
-import argparse
-import sys
+
 from git import Repo, GitCommandError
 
 from nltk import pos_tag
@@ -171,76 +170,3 @@ def find_words(projects_paths: set, word_types: set, top_size: int):
         unique_words_counter += len(result_words[word_type])
 
     return result_words, total_words_counter, unique_words_counter
-
-
-def write_report_to_console(words: dict, total_words_counter:int, unique_words_counter:int) -> None:
-    
-    print('total %s words, %s unique' % (total_words_counter, unique_words_counter))
-
-    if words:
-        for word_type, counted_words in words.items():
-            print('---------------------')
-            print(f'Word type {word_type}:')
-            for word, occurrence in counted_words.items():
-                print(f'{word} – {occurrence} times')
-
-    else:
-        print('No words found')
-
-
-if __name__ == '__main__':
-    wf_arg_parser = argparse.ArgumentParser(description='analyses usage of words in functions or variables names')
-    wf_arg_parser.add_argument(
-        "--dirs",
-        dest='folders_by_comma',
-        action='store',
-        help='folders for analysis, split by comma'
-    )
-    wf_arg_parser.add_argument(
-        "--git",
-        dest='repositories_by_comma',
-        action='store',
-        help='git repo .git urls for analysis, split by comma'
-    )
-    wf_arg_parser.add_argument(
-        "--top",
-        dest='max_top',
-        default=TOP_WORDS_AMOUNT,
-        action='store',
-        help=f'count of top of words in every project. default={TOP_WORDS_AMOUNT}'
-    )
-    wf_arg_parser.add_argument(
-        "--word_types",
-        dest='word_types_by_comma',
-        default='NN',
-        action='store',
-        help='word types for analysis, split by comma. VB = verb, NN = noun'
-    )
-    wf_arg_parser.add_argument(
-        "--report_type",
-        dest='report_type',
-        default='console',
-        action='store',
-        help='type of the report: console, json, csv. default=console'
-    )
-
-    args = wf_arg_parser.parse_args(sys.argv[1:])
-    if args.repositories_by_comma:
-        git_repositories = set(args.repositories_by_comma.split(','))
-    else:
-        git_repositories = None
-
-    if args.folders_by_comma:
-        folders = set(args.folders_by_comma.split(','))
-    else:
-        folders = None
-
-    word_types = set(args.word_types_by_comma.split(','))
-
-    all_folders = get_all_projects_paths(folders, git_repositories)
-
-    words, total_words_counter, unique_words_counter = find_words(all_folders, word_types, int(args.max_top))
-
-    if args.report_type == 'console':
-        write_report_to_console(words, total_words_counter, unique_words_counter)
-
