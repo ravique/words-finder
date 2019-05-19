@@ -18,8 +18,7 @@ def compose_report_name(file_format: str) -> str:
 
 def write_report_to_console(words: dict, total_words_counter: int, unique_words_counter: int) -> None:
     print('total %s words, %s unique' % (total_words_counter, unique_words_counter))
-
-    if words:
+    if words and total_words_counter != 0:
         for word_type, counted_words in words.items():
             print('---------------------')
             print(f'Word type {word_type}:')

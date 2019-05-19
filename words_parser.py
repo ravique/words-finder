@@ -5,6 +5,7 @@ import collections
 from git import Repo, GitCommandError
 
 from nltk import pos_tag
+import giturlparse
 
 TOP_WORDS_AMOUNT = 10
 
@@ -40,7 +41,6 @@ def get_python_files(path: str) -> set:
 
 
 def get_trees(path: str, lang: str, with_file_names=False, with_file_content=False) -> list:
-
     trees = list()
 
     if lang == 'python':
@@ -69,8 +69,8 @@ def get_trees(path: str, lang: str, with_file_names=False, with_file_content=Fal
     return trees
 
 
-def get_all_names(tree: list) -> list:
-    return [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
+# def get_all_names(tree: list) -> list:
+#     return [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
 
 
 def get_words_from_function_name(function_name: str, word_type: str) -> list:
@@ -99,13 +99,14 @@ def get_top_words_in_path(path: str, word_types: set, top_size=10) -> dict:
     trees = get_trees(path, lang='python')
     all_functions = make_flat(
         [[node.name.lower() for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)] for tree in
-         trees])
+         trees if tree])
     clean_functions = trim_magic_names(all_functions)
     print('functions extracted')
 
     counted_words = {}
     for word_type in word_types:
-        all_words = make_flat([get_words_from_function_name(function_name, word_type) for function_name in clean_functions])
+        all_words = make_flat([get_words_from_function_name(function_name, word_type)
+                               for function_name in clean_functions])
         counted_words[word_type] = collections.Counter(all_words).most_common(top_size)
     # print(counted_words)
 
@@ -120,10 +121,11 @@ def get_top_words_in_path(path: str, word_types: set, top_size=10) -> dict:
 #     return collections.Counter(cleaned_names).most_common(top_size)
 
 
-def clone_repo_from_git(repo: str):
-    repo_name = repo.split('/')[-1].replace('.git', '')
+def clone_repo_from_git(repo_url: str):
+    repo_parse_url = giturlparse.parse(repo_url)
+    repo_name = repo_parse_url.repo
     try:
-        Repo.clone_from(repo, os.path.join('repo', repo_name))
+        Repo.clone_from(repo_url, os.path.join('repo', repo_name))
     except GitCommandError as git_error:
         print(f'{repo_name} was not downloaded because of:')
         print(git_error)
@@ -135,8 +137,7 @@ def clone_repo_from_git(repo: str):
     return repo_path
 
 
-def get_all_projects_paths(local_paths, git_repositories_urls):
-
+def get_all_projects_paths(local_paths: set, git_repositories_urls: set):
     projects_paths = set()
 
     if local_paths:
@@ -156,7 +157,6 @@ def find_words(projects_paths: set, word_types: set, top_size: int):
     result_words = collections.defaultdict(collections.Counter)
     total_words_counter = 0
     unique_words_counter = 0
-
 
     for project_path in projects_paths:
         new_words_by_type = get_top_words_in_path(project_path, word_types, top_size)
