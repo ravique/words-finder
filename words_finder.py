@@ -11,7 +11,6 @@ ALLOWED_REPORT_TYPES = ('csv', 'console', 'json')
 ALLOWED_OBJECT_TYPES = ('functions', 'classes', 'variables')
 
 
-# TODO: add analysis for variables and class names
 # TODO: write good readme file
 
 
