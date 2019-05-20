@@ -21,8 +21,3 @@ setuptools.setup(
     ],
     license="MIT",
 )
-
-
-import nltk
-
-nltk.download('averaged_perceptron_tagger')
