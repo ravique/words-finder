@@ -40,13 +40,13 @@ def get_python_files(path: str) -> set:
     return file_names
 
 
-def get_trees(path: str, lang: str, with_file_names=False, with_file_content=False) -> list:
+def get_trees(path: str, lang: str = 'python', with_file_names=False, with_file_content=False) -> list:
     trees = list()
 
     if lang == 'python':
         file_names = get_python_files(path)
 
-    print('total %s files' % len(file_names))
+    print(f'total {len(file_names)} files')
 
     for filename in file_names:
         with open(filename, 'r', encoding='utf-8') as attempt_handler:
@@ -69,14 +69,10 @@ def get_trees(path: str, lang: str, with_file_names=False, with_file_content=Fal
     return trees
 
 
-# def get_all_names(tree: list) -> list:
-#     return [node.id for node in ast.walk(tree) if isinstance(node, ast.Name)]
-
-
-def get_words_from_function_name(function_name: str, word_type: str) -> list:
+def get_words_from_object_name(object_name: str, word_type: str) -> list:
     name_parts = []
 
-    for name_part in function_name.split('_'):
+    for name_part in object_name.split('_'):
         name_part_word_type = check_word_type(name_part)
         if name_part_word_type == word_type:
             name_parts.append(name_part)
@@ -84,41 +80,55 @@ def get_words_from_function_name(function_name: str, word_type: str) -> list:
     return name_parts
 
 
-def split_snake_case_name_to_words(snake_name):
+def split_snake_case_name_to_words(snake_name: str) -> list:
     return [name_part for name_part in snake_name.split('_') if name_part]
 
 
-# def get_all_words_in_path(path: str) -> list:
-#     trees = get_trees(path)
-#     all_functions = make_flat([get_all_names(tree) for tree in trees])
-#     clean_functions = trim_magic_names(all_functions)
-#     return make_flat([split_snake_case_name_to_words(function_name) for function_name in clean_functions])
+def get_variables_from_tree(trees):
+    return make_flat(
+        [[node.id.lower() for node in ast.walk(tree) if isinstance(node, ast.Name)] for tree in
+         trees if tree])
 
 
-def get_top_words_in_path(path: str, word_types: set, top_size=10) -> dict:
-    trees = get_trees(path, lang='python')
-    all_functions = make_flat(
+def get_functions_from_tree(trees):
+    return make_flat(
         [[node.name.lower() for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)] for tree in
          trees if tree])
-    clean_functions = trim_magic_names(all_functions)
-    print('functions extracted')
+
+
+def get_classes_from_tree(trees):
+    return make_flat(
+        [[node.name.lower() for node in ast.walk(tree) if isinstance(node, ast.ClassDef)] for tree in
+         trees if tree])
+
+
+def get_top_words_in_path(path: str, word_types: set, object_types: set, top_size=10):
+    trees = get_trees(path, lang='python')
+    object_names = []
+
+    if 'functions' in object_types:
+        all_functions = get_functions_from_tree(trees)
+        object_names += trim_magic_names(all_functions)
+        print('functions extracted')
+
+    if 'classes' in object_types:
+        object_names += get_classes_from_tree(trees)
+        print('classes extracted')
+
+    if 'variables' in object_types:
+        object_names += get_variables_from_tree(trees)
+        print('variables extracted')
 
     counted_words = {}
+    total_words_count = 0
+
     for word_type in word_types:
-        all_words = make_flat([get_words_from_function_name(function_name, word_type)
-                               for function_name in clean_functions])
+        all_words = make_flat([get_words_from_object_name(object_name, word_type)
+                               for object_name in object_names])
+        total_words_count += len(all_words)
         counted_words[word_type] = collections.Counter(all_words).most_common(top_size)
-    # print(counted_words)
 
-    return counted_words
-
-
-# def get_top_functions_names_in_path(path: str, top_size=10):
-#     trees = get_trees(path)
-#     all_names = make_flat([[node.name.lower() for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
-#                            for tree in trees])
-#     cleaned_names = trim_magic_names(all_names)
-#     return collections.Counter(cleaned_names).most_common(top_size)
+    return counted_words, total_words_count
 
 
 def clone_repo_from_git(repo_url: str):
@@ -153,17 +163,17 @@ def get_all_projects_paths(local_paths: set, git_repositories_urls: set):
     return projects_paths
 
 
-def find_words(projects_paths: set, word_types: set, top_size: int):
+def find_words(projects_paths: set, word_types: set, objects_types: set, top_size: int):
     result_words = collections.defaultdict(collections.Counter)
-    total_words_counter = 0
     unique_words_counter = 0
+    total_words_counter = 0
 
     for project_path in projects_paths:
-        new_words_by_type = get_top_words_in_path(project_path, word_types, top_size)
+        new_words_by_type, total_words_count = get_top_words_in_path(project_path, word_types, objects_types, top_size)
+        total_words_counter += total_words_count
 
         for word_type, new_words in new_words_by_type.items():  # update result words dict from new words
             result_words[word_type] += collections.Counter(dict(new_words))
-            total_words_counter += len(new_words)
 
     for word_type, words_list in result_words.items():  # count words
         result_words[word_type] = dict(collections.Counter(words_list).most_common(top_size))
