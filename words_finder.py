@@ -59,6 +59,9 @@ def check_objects(object_type):
 
 
 if __name__ == '__main__':
+
+
+
     wf_arg_parser = argparse.ArgumentParser(
         description='Analyses usage of words in functions, classes or variables names')
     wf_arg_parser.add_argument(
