@@ -14,5 +14,10 @@ setuptools.setup(
     url="https://github.com/ravique/otus-homework1",
     py_modules={'report_writers', 'words_parser'},
     packages=setuptools.find_packages(),
+    install_requires=[
+        'nltk==3.4.1',
+        'GitPython==2.1.11',
+        'giturlparse==0.9.2'
+    ],
     license="MIT",
 )
