@@ -1,6 +1,9 @@
-# Project Title
+# Words Finder
 
-Script for static code analysis. Search for different parts of speech in function names in .py files.
+Script for static code analysis. Search for different parts of speech in function names, class or variable names
+in .py files. In this version or script you can search for verbs (base form take) and nouns (singular). 
+You can search in multiple local directories and git repositories (script downloads them into /repo folder).
+You can get reports to console, csv or json files. 
 
 ## Getting Started
 
@@ -8,83 +11,67 @@ To clone this script using pip:
 ```
 $ pip install git+https://github.com/ravique/otus-homework1.git
 ```
+If you have just downloaded script as [script-archive](https://github.com/ravique/otus-homework1/archive/master.zip), unzip it into any folder.
 
-### Prerequisites
-
-To use this script you need to have nltk, GitPython and giturlparse modules.
-
+Install requirements:
 ```
-Give examples
+$ pip install requirements.txt
 ```
 
 ### Installing
 
-A step by step series of examples that tell you how to get a development env running
+After script installation, you need to install NLTK model:
 
-Say what the step will be
-
+In Python console:
 ```
-Give the example
-```
-
-And repeat
-
-```
-until finished
+>> nltk.download('averaged_perceptron_tagger')
 ```
 
-End with an example of getting some data out of the system or using it for a little demo
+## How to use
+```
+usage: words_finder.py [-h] [--dirs [FOLDERS [FOLDERS ...]]]
+                       [--git [REPOSITORIES [REPOSITORIES ...]]] [-T MAX_TOP]
+                       [-WT [WORD_TYPES [WORD_TYPES ...]]] [-RT REPORT_TYPE]
+                       [-O [OBJECTS [OBJECTS ...]]]
 
-## Running the tests
+Analyses usage of words in functions, classes or variables names
 
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
+optional arguments:
+  -h, --help            show this help message and exit
+  --dirs [FOLDERS [FOLDERS ...]]
+                        Folders in quotes for analysis, split by space.
+                        Default: None.
+                        Example: --dirs "C:\Python36\Lib\email" "C:\Python36\Lib\logging"
+  --git [REPOSITORIES [REPOSITORIES ...]]
+                        Git repo .git urls in quotes for analysis, split by space.
+                        Default: None. 
+                        Example: --git "https://github.com/nickname/repo1" "https://github.com/nickname/repo2"
+  -T MAX_TOP, --top MAX_TOP
+                        Count of top of words (by every type). 
+                        Default: 10.
+                        Example: -T 20
+  -WT [WORD_TYPES [WORD_TYPES ...]], --word_types [WORD_TYPES [WORD_TYPES ...]]
+                        Word types for analysis, split by space. 
+                        VB = verb, NN = noun. 
+                        Default: NN. 
+                        Example: -WT VB NN
+  -RT REPORT_TYPE, --report_type REPORT_TYPE
+                        Type of the report: console, json, csv.
+                        Default=console. Example: -RT json
+  -O [OBJECTS [OBJECTS ...]], --objects [OBJECTS [OBJECTS ...]]
+                        Оbjects for search, split by space: functions, classes, variables. 
+                        Default: functions.
+                        Example: -O functions classes
 
 ```
-Give an example
-```
+### Important
 
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-## Deployment
-
-Add additional notes about how to deploy this on a live system
-
-## Built With
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
-
-## Contributing
-
-Please read [CONTRIBUTING.md](https://gist.github.com/PurpleBooth/b24679402957c63ec426) for details on our code of conduct, and the process for submitting pull requests to us.
-
-## Versioning
-
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/your/project/tags). 
+Always wrap in quotes local paths (--dirs args) and git urls (--git args).
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
-
-See also the list of [contributors](https://github.com/your/project/contributors) who participated in this project.
+* **Andrei Etmanov** - *Student of OTUS :)*
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md) file for details
-
-## Acknowledgments
-
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+This project is licensed under the MIT License – see the [LICENSE.md](LICENSE.md) file for details

@@ -4,14 +4,15 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setuptools.setup(
-    name="otus-homework1",
+    name="wordsfinder",
     version="dev",
     author="Andrei Etmanov",
     author_email="andres@space-coding.ru",
-    description="Script for static code analysis. Search for different parts of speech in function names in .py files",
+    description="Script for static code analysis. Search for different parts of "
+                "speech in different objects in .py files",
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/ravique/otus-homework1",
+    url="https://github.com/ravique/wordsfinder",
     py_modules={'report_writers', 'words_parser', '__init__', 'words_finder'},
     packages=setuptools.find_packages(),
     install_requires=[
