@@ -12,6 +12,7 @@ setuptools.setup(
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/ravique/otus-homework1",
+    py_modules={'report_writers', 'words_parser', '__init__', 'words_finder'},
     packages=setuptools.find_packages(),
     install_requires=[
         'nltk==3.4.1',
