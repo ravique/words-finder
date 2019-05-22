@@ -120,8 +120,8 @@ if __name__ == '__main__':
 
     args = wf_arg_parser.parse_args(sys.argv[1:])
 
-    folders = set(args.folders) if args.folders else None # TODO: rewrite to or
-    repositories = set(args.repositories) if args.repositories else None
+    folders = set(args.folders) or None
+    repositories = set(args.repositories) or None
 
     all_folders = get_all_projects_paths(folders, repositories)
 
