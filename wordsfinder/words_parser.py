@@ -33,7 +33,7 @@ def get_python_files(path: str) -> set:
             if file.endswith('.py'):
                 file_names.add(os.path.join(dir_name, file))
                 if len(file_names) == 100:
-                    break
+                    break # TODO: replace to return
         else:
             continue
         break
