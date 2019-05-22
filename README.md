@@ -15,7 +15,7 @@ If you have just downloaded script as [script-archive](https://github.com/raviqu
 
 Install requirements:
 ```
-$ pip install requirements.txt
+$ pip install -r requirements.txt
 ```
 
 ### Installing

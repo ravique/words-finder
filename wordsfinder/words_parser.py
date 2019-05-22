@@ -78,10 +78,6 @@ def get_words_from_object_name(object_name: str, word_type: str) -> list:
     return name_parts
 
 
-def split_snake_case_name_to_words(snake_name: str) -> list:
-    return [name_part for name_part in snake_name.split('_') if name_part]
-
-
 def get_objects_from_tree(object_types: set, trees: list) -> list:
     object_names = []
 
