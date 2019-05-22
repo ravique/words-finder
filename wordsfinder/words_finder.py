@@ -6,10 +6,6 @@ import giturlparse
 from wordsfinder.report_writers import write_report_to_console, write_report_to_csv, write_report_to_json
 from wordsfinder.words_parser import get_all_projects_paths, find_words, TOP_WORDS_AMOUNT
 
-ALLOWED_WORD_TYPES = ('NN', 'VB')
-ALLOWED_REPORT_TYPES = ('csv', 'console', 'json')
-ALLOWED_OBJECT_TYPES = ('functions', 'classes', 'variables')
-
 
 def check_folders(folder):
     if not os.path.isdir(folder):
@@ -26,18 +22,6 @@ def check_git_url(repo_url):
     return repo_url
 
 
-def check_word_type_input(word_type):
-    if word_type not in ALLOWED_WORD_TYPES:
-        raise argparse.ArgumentTypeError(f'{word_type} must be in {", ".join(ALLOWED_WORD_TYPES)}')
-    return word_type
-
-
-def check_report_type(report_type: str):
-    if report_type not in ALLOWED_REPORT_TYPES:
-        raise argparse.ArgumentTypeError(f'{report_type} must be in {", ".join(ALLOWED_REPORT_TYPES)}')
-    return report_type
-
-
 def check_top_words(max_top: str):
     try:
         int(max_top)
@@ -47,12 +31,6 @@ def check_top_words(max_top: str):
         raise argparse.ArgumentTypeError(f"{max_top} must be a positive integer")
 
     return max_top
-
-
-def check_objects(object_type):
-    if object_type not in ALLOWED_OBJECT_TYPES:
-        raise argparse.ArgumentTypeError(f'{object_type} must be in {", ".join(ALLOWED_OBJECT_TYPES)}')
-    return object_type
 
 
 if __name__ == '__main__':
@@ -93,7 +71,7 @@ if __name__ == '__main__':
         nargs='*',
         default=['NN'],
         action='store',
-        type=check_word_type_input,
+        choices=('NN', 'VB'),
         help='Word types for analysis, split by space. VB = verb, NN = noun. Default: NN. Example: -WT VB NN'
     )
     wf_arg_parser.add_argument(
@@ -102,7 +80,7 @@ if __name__ == '__main__':
         dest='report_type',
         default='console',
         action='store',
-        type=check_report_type,
+        choices=('csv', 'console', 'json'),
         help='Type of the report: console, json, csv. Default: console. Example: -RT json'
     )
     wf_arg_parser.add_argument(
@@ -112,7 +90,7 @@ if __name__ == '__main__':
         nargs='*',
         default=['functions'],
         action='store',
-        type=check_objects,
+        choices=('functions', 'classes', 'variables'),
         help='Оbjects for search, split by space: functions, classes, variables. '
              'Default = functions.'
              'Example: -O functions classes'
@@ -132,8 +110,10 @@ if __name__ == '__main__':
                                                                   args.objects, args.max_top)
 
     if args.report_type == 'csv':
-        write_report_to_csv(words, total_words_counter, unique_words_counter)
+        if write_report_to_csv(words, total_words_counter, unique_words_counter):
+            print('Report saved to csv-file')
     elif args.report_type == 'json':
-        write_report_to_json(words, total_words_counter, unique_words_counter)
+        if write_report_to_json(words, total_words_counter, unique_words_counter):
+            print('Report saved to json-file')
     elif args.report_type == 'console':
         write_report_to_console(words, total_words_counter, unique_words_counter)

@@ -1,22 +1,22 @@
 import ast
 import os
 import collections
+from typing import Tuple, Union
 
 from git import Repo, GitCommandError
-
 from nltk import pos_tag
 import giturlparse
 
 TOP_WORDS_AMOUNT = 10
 
 
-def make_flat(list_of_lists):
+def make_flat(list_of_lists: list) -> list:
     """ [(1,2), (3,4)] -> [1, 2, 3, 4]"""
     return sum([list(item) for item in list_of_lists], [])
 
 
-def trim_magic_names(names: list) -> list:
-    return [name for name in names if not (name.startswith('__') and name.endswith('__'))]
+def is_magic_function(function_name: str) -> bool:
+    return all((function_name.startswith('__'), function_name.endswith('__')))
 
 
 def check_word_type(word: str) -> bool:
@@ -38,8 +38,8 @@ def get_python_files(path: str) -> set:
     return file_names
 
 
-def get_trees(path: str, lang: str = 'python', with_file_names=False, with_file_content=False) -> list:
-    trees = list()
+def get_ast_trees(path: str, lang: str = 'python', with_file_names=False, with_file_content=False) -> list:
+    ast_trees_list = list()
 
     if lang == 'python':
         file_names = get_python_files(path)
@@ -57,14 +57,14 @@ def get_trees(path: str, lang: str = 'python', with_file_names=False, with_file_
 
         if with_file_names:
             if with_file_content:
-                trees.append((filename, main_file_content, tree))
+                ast_trees_list.append((filename, main_file_content, tree))
             else:
-                trees.append((filename, tree))
+                ast_trees_list.append((filename, tree))
         else:
-            trees.append(tree)
+            ast_trees_list.append(tree)
 
-    print('trees generated')
-    return trees
+    print('ast trees generated')
+    return ast_trees_list
 
 
 def get_words_from_object_name(object_name: str, word_type: str) -> list:
@@ -82,40 +82,26 @@ def split_snake_case_name_to_words(snake_name: str) -> list:
     return [name_part for name_part in snake_name.split('_') if name_part]
 
 
-def get_variables_from_tree(trees):
-    return make_flat(
-        [[node.id.lower() for node in ast.walk(tree) if isinstance(node, ast.Name)] for tree in
-         trees if tree])
-
-
-def get_functions_from_tree(trees):
-    return make_flat(
-        [[node.name.lower() for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)] for tree in
-         trees if tree])
-
-
-def get_classes_from_tree(trees):
-    return make_flat(
-        [[node.name.lower() for node in ast.walk(tree) if isinstance(node, ast.ClassDef)] for tree in
-         trees if tree])
-
-
-def get_top_words_in_path(path: str, word_types: set, object_types: set, top_size=10):
-    trees = get_trees(path, lang='python')
+def get_objects_from_tree(object_types: set, trees: list) -> list:
     object_names = []
 
-    if 'functions' in object_types:
-        all_functions = get_functions_from_tree(trees)
-        object_names += trim_magic_names(all_functions)
-        print('functions extracted')
+    for tree in trees:
+        if tree:
+            for node in ast.walk(tree):
+                if 'functions' in object_types and isinstance(node, ast.FunctionDef) \
+                        and not is_magic_function(node.name):
+                    object_names.append(node.name.lower())
+                if 'variables' in object_types and isinstance(node, ast.Name):
+                    object_names.append(node.id.lower())
+                if 'classes' in object_types and isinstance(node, ast.ClassDef):
+                    object_names.append(node.name.lower())
 
-    if 'classes' in object_types:
-        object_names += get_classes_from_tree(trees)
-        print('classes extracted')
+    return object_names
 
-    if 'variables' in object_types:
-        object_names += get_variables_from_tree(trees)
-        print('variables extracted')
+
+def get_top_words_in_path(path: str, word_types: set, object_types: set, top_size: int = 10) -> Tuple[dict, int]:
+    trees = get_ast_trees(path, lang='python')
+    object_names = get_objects_from_tree(object_types, trees)
 
     counted_words = {}
     total_words_count = 0
@@ -129,7 +115,7 @@ def get_top_words_in_path(path: str, word_types: set, object_types: set, top_siz
     return counted_words, total_words_count
 
 
-def clone_repo_from_git(repo_url: str):
+def clone_repo_from_git(repo_url: str) -> Union[str, None]:
     repo_parse_url = giturlparse.parse(repo_url)
     repo_name = repo_parse_url.repo
     try:
@@ -145,7 +131,7 @@ def clone_repo_from_git(repo_url: str):
     return repo_path
 
 
-def get_all_projects_paths(local_paths: set, git_repositories_urls: set):
+def get_all_projects_paths(local_paths: set, git_repositories_urls: set) -> set:
     projects_paths = set()
 
     if local_paths:
@@ -161,7 +147,7 @@ def get_all_projects_paths(local_paths: set, git_repositories_urls: set):
     return projects_paths
 
 
-def find_words(projects_paths: set, word_types: set, objects_types: set, top_size: int):
+def find_words(projects_paths: set, word_types: set, objects_types: set, top_size: int) -> Tuple[dict, int, int]:
     result_words = collections.defaultdict(collections.Counter)
     unique_words_counter = 0
     total_words_counter = 0

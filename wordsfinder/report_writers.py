@@ -5,7 +5,6 @@ import datetime
 
 
 def compose_report_name(file_format: str) -> str:
-
     file_name = f'{datetime.datetime.now().date()}-report.{file_format}'
     counter = 1
 
@@ -29,7 +28,7 @@ def write_report_to_console(words: dict, total_words_counter: int, unique_words_
         print('No words found')
 
 
-def write_report_to_csv(words: dict, total_words_counter: int, unique_words_counter: int):
+def write_report_to_csv(words: dict, total_words_counter: int, unique_words_counter: int) -> bool:
     csv_file_name = compose_report_name('csv')
 
     with open(csv_file_name, 'a', newline='', encoding='utf-8') as report_file:
@@ -45,10 +44,10 @@ def write_report_to_csv(words: dict, total_words_counter: int, unique_words_coun
         else:
             report_writer.writerow('No words found')
 
-    print('Report saved to csv-file')
+    return True
 
 
-def write_report_to_json(words: dict, total_words_counter: int, unique_words_counter: int):
+def write_report_to_json(words: dict, total_words_counter: int, unique_words_counter: int) -> bool:
     report_dict = dict()
     report_dict['general_report'] = {'total_words': total_words_counter, 'unique_words': unique_words_counter}
     if words:
@@ -59,4 +58,4 @@ def write_report_to_json(words: dict, total_words_counter: int, unique_words_cou
     with open(json_file_name, 'w', newline='', encoding='utf-8') as report_json_file:
         json.dump(report_dict, report_json_file, indent=4)
 
-    print('Report saved to json-file')
+    return True
