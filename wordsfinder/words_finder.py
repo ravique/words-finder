@@ -3,8 +3,8 @@ import sys
 import os
 import giturlparse
 
-from report_writers import write_report_to_console, write_report_to_csv, write_report_to_json
-from words_parser import get_all_projects_paths, find_words, TOP_WORDS_AMOUNT
+from wordsfinder.report_writers import write_report_to_console, write_report_to_csv, write_report_to_json
+from wordsfinder.words_parser import get_all_projects_paths, find_words, TOP_WORDS_AMOUNT
 
 ALLOWED_WORD_TYPES = ('NN', 'VB')
 ALLOWED_REPORT_TYPES = ('csv', 'console', 'json')
@@ -120,8 +120,8 @@ if __name__ == '__main__':
 
     args = wf_arg_parser.parse_args(sys.argv[1:])
 
-    folders = set(args.folders) or None
-    repositories = set(args.repositories) or None
+    folders = set(args.folders) if args.folders else None
+    repositories = set(args.repositories) if args.repositories else None
 
     all_folders = get_all_projects_paths(folders, repositories)
 
