@@ -15,7 +15,7 @@ setuptools.setup(
     url="https://github.com/ravique/wordsfinder",
     py_modules={'report_writers', 'words_parser', '__init__', 'words_finder'},
     packages=setuptools.find_packages(),
-    scripts=['words_finder.py'],
+    scripts=['wordsfinder/words_finder.py'],
     install_requires=[
         'nltk==3.4.1',
         'GitPython==2.1.11',
