@@ -8,13 +8,13 @@ You can get reports to console, csv or json files.
 ## Getting Started
 
 To clone this script using pip:
-```
+```commandline
 $ pip install git+https://github.com/ravique/otus-homework1.git
 ```
 If you have just downloaded script as [script-archive](https://github.com/ravique/otus-homework1/archive/master.zip), unzip it into any folder.
 
 Install requirements:
-```
+```commandline
 $ pip install -r requirements.txt
 ```
 
@@ -23,12 +23,12 @@ $ pip install -r requirements.txt
 After script installation, you need to install NLTK model:
 
 In Python console:
-```
+```python
 >> nltk.download('averaged_perceptron_tagger')
 ```
 
 ## How to use
-```
+```commandline
 usage: words_finder.py [-h] [--dirs [FOLDERS [FOLDERS ...]]]
                        [--git [REPOSITORIES [REPOSITORIES ...]]] [-T MAX_TOP]
                        [-WT [WORD_TYPES [WORD_TYPES ...]]] [-RT REPORT_TYPE]
