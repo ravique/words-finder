@@ -17,7 +17,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     scripts=['wordsfinder/words_finder.py'],
     install_requires=[
-        'nltk==3.4.1',
+        'nltk==3.4.5',
         'GitPython==2.1.11',
         'giturlparse==0.9.2'
     ],
