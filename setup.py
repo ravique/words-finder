@@ -18,7 +18,7 @@ setuptools.setup(
     scripts=['wordsfinder/words_finder.py'],
     install_requires=[
         'nltk==3.4.5',
-        'GitPython==2.1.11',
+        'GitPython==3.1.34',
         'giturlparse==0.9.2'
     ],
     license="MIT",
